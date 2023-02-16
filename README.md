@@ -94,3 +94,7 @@ module.exports = {
 ### Requirement
 
 NodeJS version support: v14.21.1
+
+### Run Service
+- Install Docker
+- Run `docker-compose build` -> `docker-compose up -d`
