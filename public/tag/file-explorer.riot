@@ -1,0 +1,296 @@
+<file-explorer>
+    <div class="ui bottom attached segment" style="border-top: none;">
+        <div style="height: 32px">
+            <input type="file" style="display: none"
+                   id="uploadInputRef"
+                   onchange="{(e) => startUpload(e)}">
+            <button class="ui labeled icon primary left floated compact button upload" disabled="{state.uploading}" onclick="{() => this.$('#uploadInputRef').click()}">
+                <i class="upload icon"></i>
+                {state.uploading ? 'Uploading' : 'Upload'}
+            </button>
+        </div>
+
+        <div class="ui divider"></div>
+
+        <div id="folderTabs" class="ui pointing secondary menu" style="overflow-x: auto; padding-bottom: 4px; border-bottom-width: 1px;">
+            <a each={ folderName in state.folders } class="item {folderName === state.curFolder ? 'active': null}" data-tab="{folderName}">
+                {folderName}
+            </a>
+        </div>
+
+        <table class="ui celled striped small table">
+            <thead>
+            <tr>
+                <th class="two wide center aligned">ID</th>
+                <th class="eight wide">Name</th>
+                <th class="two wide">Size</th>
+                <th class="two wide">Create Time</th>
+                <th class="two wide center aligned">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr each={item in state.files }>
+                <td>
+                    <h5 class="ui center aligned header"><a href="{getDownloadLink(item.id)}" title="{getDownloadLink(item.id)}">{item.id}</a></h5>
+                </td>
+                <td class="truncate imagePopup" title="{item.name}" data-html="{getImagePopup(item)}">{item.name}</td>
+                <td>{humanizeFileSize(item.size)}</td>
+                <td title="{(new Date(item.createTime)).toLocaleString()}">{timeAgo(new Date(item.createTime))}</td>
+                <td>
+                    <div class="ui mini buttons">
+                        <button class="ui labeled icon button copyBtn2"
+                                data-clipboard-text="{getDownloadLink(item.id)}"
+                                title="Click to copy link"
+                                data-content="Copied">
+                            <i class="copy icon"></i>
+                            Link
+                        </button>
+                        <button class="ui icon negative button" onclick="{() => showConfirmDelete(item)}">
+                            <i class="delete icon"/>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th>
+                    Total: {state.total}
+                </th>
+                <th colspan="4">
+                    <div class="ui right floated pagination mini menu">
+                        <a class="icon item {state.curPage <= 0 ? 'disabled' : ''}" onclick="{prevPage}">
+                            <i class="left chevron icon"></i>
+                        </a>
+                        <span class="item">{state.curPage + 1}</span>
+                        <a class="icon item {state.curPage >= state.maxPage - 1 ? 'disabled' : ''}" onclick="{nextPage}">
+                            <i class="right chevron icon"></i>
+                        </a>
+                    </div>
+                </th>
+            </tr>
+            </tfoot>
+        </table>
+
+        <div class="ui mini modal" id="confirmDeleteModal">
+            <div class="header">
+                {`Delete file ${state.curFile ? state.curFile.name : ''}`}
+            </div>
+            <div class="actions">
+                <div class="ui deny button">Cancel</div>
+                <div class="ui red ok button">Delete</div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .thumbnail {
+            max-height: 290px
+        }
+
+        .upload .button {
+            transition: all 400ms;
+        }.
+        
+    </style>
+
+    <script>
+        const pageSize = 5;
+        let confirmDeleteModal;
+
+        const fileSizeUnits = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
+        const timeUnits     = [
+            {name: 'second', limit: 60, in_seconds: 1},
+            {name: 'minute', limit: 3600, in_seconds: 60},
+            {name: 'hour', limit: 86400, in_seconds: 3600},
+            {name: 'day', limit: 604800, in_seconds: 86400},
+            {name: 'week', limit: 2629743, in_seconds: 604800},
+            {name: 'month', limit: 31556926, in_seconds: 2629743},
+            {name: 'year', limit: null, in_seconds: 31556926},
+        ];
+
+        let clipboard;
+
+        export default {
+            isImage(file) {
+                if (!file || !file.mimeType) return;
+                return file.mimeType.startsWith('image/');
+            },
+
+            getImagePopup(file) {
+                if (!this.isImage(file)) return null;
+                return `<img class="ui small image" src="${this.getDownloadLink(file.id)}/w300">`;
+            },
+
+            showConfirmDelete(file) {
+                const self = this;
+                this.update({curFile: file});
+                if (!confirmDeleteModal) {
+                    confirmDeleteModal = $(this.$('#confirmDeleteModal'));
+                    confirmDeleteModal.modal({
+                        closable:  true,
+                        onDeny:    function () {
+                            return true;
+                        },
+                        onApprove: async function () {
+                            await restDelete(`/file/${self.state.curFile.id}`);
+                            await self.loadFiles();
+                            return true;
+                        },
+                    });
+                }
+
+                confirmDeleteModal.modal('show');
+            },
+
+            humanizeFileSize(bytes, precision) {
+                if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) return '-';
+                if (typeof precision === 'undefined') precision = 1;
+                const number = Math.floor(Math.log(bytes) / Math.log(1024));
+                return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) + ' ' + fileSizeUnits[number];
+            },
+
+            timeAgo(dateTime) {
+                let diff = (new Date() - dateTime) / 1000;
+                if (diff < 5) return 'now';
+
+                let i = 0;
+                let unit;
+                while (unit = timeUnits[i++]) {
+                    if (diff < unit.limit || !unit.limit) {
+                        diff = Math.floor(diff / unit.in_seconds);
+                        return diff + ' ' + unit.name + (diff > 1 ? 's' : '');
+                    }
+                }
+            },
+
+            getDownloadLink(fileId) {
+                const prefix = window.location.origin;
+                return `${prefix}/file/${fileId}`;
+            },
+
+            startUpload(event) {
+                const file = event.target.files[0];
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                this.update({uploading: true});
+                post(`/upload/${this.state.curFolder}`, formData).then(async data => {
+                    console.log('upload success', data);
+                    if (this.state.folders.length === 0) {
+                        await this.loadFolders();
+                    } else {
+                        await this.loadFiles(this.state.curFolder, this.state.offset, this.state.limit);
+                    }
+                }).catch(err => {
+                    console.log('upload failed', err);
+                    $('body').toast({
+                        class:    'error',
+                        position: 'bottom center',
+                        message:  `upload failed ${err.message}`,
+                    });
+                }).finally(() => {
+                    this.$('#uploadInputRef').value = null;
+                    this.update({uploading: false});
+                });
+            },
+
+            onUpdated(props, state) {
+                if (clipboard) clipboard.destroy();
+
+                clipboard = new ClipboardJS('.copyBtn2');
+                clipboard.on('success', function (e) {
+                    console.log('copied', e.text);
+
+                    e.clearSelection();
+                    const btn = $(e.trigger);
+                    btn.popup({
+                        on:           'hover',
+                        hideOnScroll: true,
+                        onHidden:     () => {
+                            btn.popup('destroy');
+                        },
+                    });
+                    btn.popup('show');
+                });
+            },
+
+            async loadFiles() {
+                const {items, total, offset, limit} = await get(`/folder/${this.state.curFolder}?offset=${this.state.offset}&limit=${this.state.limit}`);
+                let curPage                         = Math.floor(offset / limit);
+                let maxPage                         = Math.ceil(total / limit);
+                if (isNaN(curPage)) curPage = 0;
+                if (isNaN(maxPage)) maxPage = 0;
+                this.update({
+                    total, curPage, maxPage,
+                    files: items,
+                });
+
+                $(this.$$('td.imagePopup')).popup({});
+            },
+
+            async nextPage() {
+                if (this.state.curPage >= this.state.maxPage - 1) return;
+                this.update({offset: this.state.offset + this.state.limit});
+                await this.loadFiles();
+            },
+
+            async prevPage() {
+                if (this.state.curPage <= 0) return;
+                this.update({offset: this.state.offset - this.state.limit});
+                await this.loadFiles();
+            },
+
+            async loadFolders() {
+                const self = this;
+                return get('/file/folders').then(folders => {
+                    if (folders.length === 0) return;
+                    this.update({
+                        folders,
+                        curFolder: folders.length > 0 ? folders[0] : '',
+                    });
+                    self.loadFiles();
+
+                    const tabItems = $(this.$$('#folderTabs > .item'));
+                    tabItems.on('click', function () {
+                        if (self.state.curFolder === this.dataset.tab) return;
+
+                        tabItems.removeClass('active');
+                        $(this).addClass('active');
+
+                        self.update({curFolder: this.dataset.tab, offset: 0, limit: pageSize});
+                        self.loadFiles();
+                    });
+                });
+            },
+
+            onMounted() {
+                console.log('onMounted file-explorer');
+                this.loadFolders();
+            },
+
+            onBeforeMount(props, state) {
+                this.state = {
+                    folders:   [],
+                    curFolder: '',
+                    files:     [],
+                    offset:    0,
+                    limit:     pageSize,
+                    total:     0,
+
+                    curPage: 0,
+                    maxPage: 1,
+
+                    uploading: false,
+                };
+            },
+        };
+    </script>
+</file-explorer>

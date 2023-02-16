@@ -1,0 +1,53 @@
+{
+  "name": "media-service",
+  "version": "1.0.0",
+  "description": "Upload server with automatic cloud backup",
+  "main": "dist/index.js",
+  "mikro-orm": {
+    "configPaths": [
+      "./mikro-orm.config.ts",
+      "./mikro-orm.config.js"
+    ]
+  },
+  "scripts": {
+    "migrate": "mikro-orm migration:up",
+    "start": "node dist/index.js",
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "predev": "cross-env NODE_ENV=development mikro-orm migration:up",
+    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
+    "migrate:create": "cross-env NODE_ENV=development mikro-orm migration:create",
+    "auth": "node auth.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {},
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@mikro-orm/cli": "^4.2.1",
+    "@mikro-orm/core": "^4.2.1",
+    "@mikro-orm/migrations": "^4.2.1",
+    "@mikro-orm/sqlite": "^4.2.1",
+    "cross-env": "^7.0.2",
+    "fastify": "^3.7.0",
+    "fastify-basic-auth": "^1.0.1",
+    "fastify-cors": "^4.1.0",
+    "fastify-multipart": "^3.2.1",
+    "fastify-static": "^3.3.0",
+    "forever": "^3.0.4",
+    "fs-extra": "^9.0.1",
+    "googleapis": "^61.0.0",
+    "lodash": "^4.17.20",
+    "sharp": "^0.26.2",
+    "short-unique-id": "^3.0.5"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.2",
+    "@types/node": "^14.14.0",
+    "nodemon": "^2.0.20",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
+  },
+  "keywords": []
+}

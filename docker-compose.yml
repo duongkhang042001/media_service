@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      target: development
+    volumes:
+      - ./:/app/
+      - /app/node_modules
+    container_name: media_service
+    expose:
+      - 8005
+    ports:
+      - 8005:8005
+    command: npm run dev
+    restart: always

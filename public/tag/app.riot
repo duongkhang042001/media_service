@@ -1,0 +1,43 @@
+<app>
+    <div class="ui raised container" style="padding-top: 16px">
+        <div id="mainMenu" class="ui two item top attached menu">
+            <a class="item active" data-menu="fileExplorer">File Explorer</a>
+            <a class="item" data-menu="appLink">App Link</a>
+        </div>
+
+        <file-explorer if={state.curMenu === 'fileExplorer'}/>
+
+        <app-link if={state.curMenu === 'appLink'}/>
+    </div>
+
+    <style>
+
+    </style>
+
+    <script>
+        export default {
+            onMounted() {
+                // console.log('onMounted app');
+                const self = this;
+
+                const menuItems = $(this.$$('#mainMenu > .item'));
+                menuItems.on('click', function () {
+                    if (self.state.curMenu === this.dataset.menu) return;
+
+                    menuItems.removeClass('active');
+                    $(this).addClass('active');
+                    // console.log('click', this.dataset.menu);
+
+                    self.update({curMenu: this.dataset.menu});
+                });
+            },
+
+            async onBeforeMount(props, state) {
+                this.state = {
+                    curMenu: 'fileExplorer',
+                    // curMenu: 'appLink',
+                };
+            },
+        };
+    </script>
+</app>

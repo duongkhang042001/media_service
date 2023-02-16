@@ -1,0 +1,298 @@
+<app-link>
+    <div class="ui bottom attached segment" style="border-top: none;">
+        <div style="height: 32px">
+            <button class="ui labeled icon primary left floated compact button upload" onclick="{showNewModal}">
+                <i class="add icon"/>
+                New app link
+            </button>
+        </div>
+
+        <div class="ui divider"></div>
+
+        <table class="ui celled striped small table">
+            <thead>
+            <tr>
+                <th class="three wide">Name</th>
+                <th class="nine wide">Redirect links</th>
+                <th class="two wide">Create Time</th>
+                <th class="two wide center aligned">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr each={item in state.appLinks }>
+                <td>
+                    <h5 class="ui center aligned header"><a href="{getDownloadLink(item.name)}" title="{getDownloadLink(item.name)}">{item.name}</a></h5>
+                </td>
+                <td class="truncate">
+                    IOS {item.iosLink}
+                    <br/>
+                    Android {item.androidLink}
+                </td>
+                <td title="{(new Date(item.createTime)).toLocaleString()}">{timeAgo(new Date(item.createTime))}</td>
+                <td>
+                    <div class="ui mini buttons">
+                        <button class="ui labeled icon button copyBtn"
+                                data-clipboard-text="{getDownloadLink(item.name)}"
+                                title="Click to copy link"
+                                data-content="Copied">
+                            <i class="copy icon"></i>
+                            Link
+                        </button>
+                        <button class="ui icon button" onclick="{() => showEditModal(item)}">
+                            <i class="edit icon"/>
+                        </button>
+                        <button class="ui icon negative button" onclick="{() => showConfirmDelete(item)}">
+                            <i class="delete icon"/>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th colspan="4">
+                    Total: {state.total}
+                </th>
+                <!--                <th colspan="4">-->
+                <!--                    <div class="ui right floated pagination mini menu">-->
+                <!--                        <a class="icon item {state.curPage <= 0 ? 'disabled' : ''}" onclick="{prevPage}">-->
+                <!--                            <i class="left chevron icon"></i>-->
+                <!--                        </a>-->
+                <!--                        <span class="item">{state.curPage + 1}</span>-->
+                <!--                        <a class="icon item {state.curPage >= state.maxPage - 1 ? 'disabled' : ''}" onclick="{nextPage}">-->
+                <!--                            <i class="right chevron icon"></i>-->
+                <!--                        </a>-->
+                <!--                    </div>-->
+                <!--                </th>-->
+            </tr>
+            </tfoot>
+        </table>
+
+        <!-- NEW APP LINK MODAL -->
+        <div class="ui modal" id="appLinkModal">
+            <div class="header">
+                {state.curAppLink ? `Edit app link ${state.curAppLink.name}` : 'Create new app link'}
+            </div>
+            <div class="content">
+                <div class="ui form" id="appLinkForm" onkeypress="{onFormEnter}">
+                    <div class="field">
+                        <label>Name</label>
+                        <input type="text" name="name" placeholder="Name">
+                    </div>
+                    <div class="field">
+                        <label>IOS Link</label>
+                        <input type="text" name="iosLink" placeholder="IOS Link">
+                    </div>
+                    <div class="field">
+                        <label>Android Link</label>
+                        <input type="text" name="androidLink" placeholder="Android Link">
+                    </div>
+                    <div class="ui error message"></div>
+                </div>
+            </div>
+            <div class="actions">
+                <div class="ui deny button">Cancel</div>
+                <div class="ui primary button" onclick="{submitForm}">Save</div>
+            </div>
+        </div>
+
+        <div class="ui mini modal" id="confirmDeleteModal">
+            <div class="header">
+                {`Delete app link ${state.curAppLink ? state.curAppLink.name : ''}`}
+            </div>
+            <div class="actions">
+                <div class="ui deny button">Cancel</div>
+                <div class="ui red ok button">Delete</div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+
+    </style>
+
+    <script>
+        const pageSize      = 100;
+        const appLinkPrefix = 'http://127.0.0.1:8005';
+        let clipboard;
+
+        const timeUnits = [
+            {name: 'second', limit: 60, in_seconds: 1},
+            {name: 'minute', limit: 3600, in_seconds: 60},
+            {name: 'hour', limit: 86400, in_seconds: 3600},
+            {name: 'day', limit: 604800, in_seconds: 86400},
+            {name: 'week', limit: 2629743, in_seconds: 604800},
+            {name: 'month', limit: 31556926, in_seconds: 2629743},
+            {name: 'year', limit: null, in_seconds: 31556926},
+        ];
+        let appLinkModal, appLinkForm, confirmDeleteModal;
+
+        export default {
+            getDownloadLink(name) {
+                return `${appLinkPrefix}/download-app/${name}`;
+            },
+
+            timeAgo(dateTime) {
+                let diff = (new Date() - dateTime) / 1000;
+                if (diff < 5) return 'now';
+
+                let i = 0;
+                let unit;
+                while (unit = timeUnits[i++]) {
+                    if (diff < unit.limit || !unit.limit) {
+                        diff = Math.floor(diff / unit.in_seconds);
+                        return diff + ' ' + unit.name + (diff > 1 ? 's' : '');
+                    }
+                }
+            },
+
+            onUpdated(props, state) {
+                if (clipboard) clipboard.destroy();
+
+                clipboard = new ClipboardJS('.copyBtn');
+                clipboard.on('success', function (e) {
+                    console.log('copied', e.text);
+
+                    e.clearSelection();
+                    const btn = $(e.trigger);
+                    btn.popup({
+                        on:           'hover',
+                        hideOnScroll: true,
+                        onHidden:     () => {
+                            btn.popup('destroy');
+                        },
+                    });
+                    btn.popup('show');
+                });
+            },
+
+            showConfirmDelete(appLink) {
+                const self = this;
+                this.update({curAppLink: appLink});
+                if (!confirmDeleteModal) {
+                    confirmDeleteModal = $(this.$('#confirmDeleteModal'));
+                    confirmDeleteModal.modal({
+                        closable:  true,
+                        onDeny:    function () {
+                            return true;
+                        },
+                        onApprove: async function () {
+                            await restDelete(`/app-link/${self.state.curAppLink.id}`);
+                            await self.loadAppLinks();
+                            return true;
+                        },
+                    });
+                }
+
+                confirmDeleteModal.modal('show');
+            },
+
+            showNewModal() {
+                this.update({curAppLink: undefined});
+                this.initModal();
+                appLinkForm.form('clear');
+                appLinkModal.modal('show');
+            },
+
+            showEditModal(appLink) {
+                this.initModal();
+                appLinkForm.form('clear');
+                this.update({curAppLink: appLink});
+                appLinkForm.form('set values', appLink);
+                appLinkModal.modal('show');
+            },
+
+            onFormEnter(event) {
+                if (event.keyCode === 13 || event.which === 13) {
+                    event.preventDefault();
+                    setTimeout(() => {
+                        this.submitForm();
+                    }, 100);
+                    return false;
+                }
+            },
+
+            submitForm() {
+                const isValid = appLinkForm.form('validate form');
+                if (!isValid) return;
+                const formValues = appLinkForm.form('get values');
+                if (this.state.curAppLink) {
+                    if (this.state.curAppLink.name === formValues.name) {
+                        formValues.name = undefined;
+                    }
+                    patch(`/app-link/${this.state.curAppLink.id}`, formValues, true).then(() => {
+                        appLinkModal.modal('hide');
+                        this.loadAppLinks();
+                    }).catch(err => {
+                        if (err.message.includes('UNIQUE')) err.message = `app link name ${formValues.name} already exists`;
+                        $('body').toast({
+                            class:    'error',
+                            position: 'bottom center',
+                            message:  `${err.message}`,
+                        });
+                    });
+                } else {
+                    post('/app-link', formValues, true).then(() => {
+                        appLinkModal.modal('hide');
+                        this.loadAppLinks();
+                    }).catch(err => {
+                        if (err.message.includes('UNIQUE')) err.message = `app link name ${formValues.name} already exists`;
+                        $('body').toast({
+                            class:    'error',
+                            position: 'bottom center',
+                            message:  `${err.message}`,
+                        });
+                    });
+                }
+            },
+
+            initModal() {
+                if (!appLinkModal) {
+                    const appLinkModelElm = $(this.$('#appLinkModal'));
+                    appLinkModal          = appLinkModelElm.modal({closable: false});
+                    appLinkForm           = appLinkModelElm.find('#appLinkForm').form({
+                        on:     'blur',
+                        fields: {
+                            name:        ['empty', 'minLength[3]'],
+                            androidLink: ['empty', 'url'],
+                            iosLink:     ['empty', 'url'],
+                        },
+                    });
+                }
+
+            },
+
+            async loadAppLinks() {
+                const {items, total, offset, limit} = await get(`/app-link?offset=${this.state.offset}&limit=${this.state.limit}`);
+                let curPage                         = Math.floor(offset / limit);
+                let maxPage                         = Math.ceil(total / limit);
+                if (isNaN(curPage)) curPage = 0;
+                if (isNaN(maxPage)) maxPage = 0;
+                this.update({
+                    total, curPage, maxPage, offset, limit,
+                    appLinks: items,
+                });
+            },
+
+            onMounted() {
+                console.log('onMounted app-link');
+
+                this.loadAppLinks(this.state.offset, this.state.limit);
+            },
+
+            onBeforeMount(props, state) {
+                this.state = {
+                    curAppLink: undefined,
+                    appLinks:   [],
+
+                    offset: 0,
+                    limit:  pageSize,
+                    total:  0,
+
+                    curPage: 0,
+                    maxPage: 1,
+                };
+            },
+        };
+    </script>
+</app-link>
