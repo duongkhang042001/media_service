@@ -81,11 +81,11 @@ module.exports = {
 - `host` `port`
 - `storageDir`:`string` thư mục lưu file upload
 - `clientId` `clientSecret` là credential của 1 google project có enable drive api,
-  - cách thay credential khác:
-    - download `credentials.json` từ google ghi đè file của project
-    - xóa `token.json` nếu có
-    - `npm run auth` để tạo lại `token.json`
-      \*Something went wrong installing the "sharp" module Cannot find module '../build/Release/sharp.node: `npm install sharp --save`
+### Cách thay credential khác:
+- download `credentials.json` từ google ghi đè file của project
+- xóa `token.json` nếu có
+- `npm run auth` để tạo lại `token.json`
+  \*Something went wrong installing the "sharp" module Cannot find module '../build/Release/sharp.node: `npm install sharp --save`
 
 ### Create Database Sqlite
 
