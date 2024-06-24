@@ -151,22 +151,18 @@ async function createDrive() {
     });
   });
 
-  // const start = () => {
-  //   server.listen(config.port, config.host, (err, address) => {
-  //     if (err) {
-  //       console.log(err);
-  //       process.exit(1);
-  //     } else {
-  //       console.log(
-  //         `⚡️ [Server] ${pkg.name}@${pkg.version} is listening at ${address}`
-  //       );
-  //     }
-  //   });
-  // };
-
-  const start = async () => {
-    await server.ready()
-  }
+  const start = () => {
+    server.listen(config.port, config.host, (err, address) => {
+      if (err) {
+        console.log(err);
+        process.exit(1);
+      } else {
+        console.log(
+          `⚡️ [Server] ${pkg.name}@${pkg.version} is listening at ${address}`
+        );
+      }
+    });
+  };
 
   process.on("uncaughtException", (error) => {
     console.error(error);
