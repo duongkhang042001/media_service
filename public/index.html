@@ -31,11 +31,11 @@
         integrity="sha512-NedNdCFnMZqBrQxjdTwD9+m0HVDDGYJ4G54h890wlBH4Wi2T8uOYOraFS4hCKLLNaUcu/2oqiCQmVTsRaox1MQ=="
         crossorigin="anonymous"></script>
     <script>
-        const APP_URL = window.location.href ?? 'http://127.0.0.1:8005';
+        const APP_URL = `${window.location.href}api` ?? 'http://127.0.0.1:8005/api';
 
         async function get(url) {
             return new Promise((resolve, reject) => {
-                fetch(url, {
+                fetch(`${APP_URL}${url}`, {
                     method: 'GET',
                     credentials: 'include',
                     headers: {},
@@ -51,7 +51,7 @@
         async function post(url, data, json = false) {
             return new Promise((resolve, reject) => {
                 const headers = json ? { 'Content-Type': 'application/json; charset=UTF-8' } : {};
-                fetch(url, {
+                fetch(`${APP_URL}${url}`, {
                     method: 'POST',
                     credentials: 'include',
                     headers,
@@ -78,7 +78,7 @@
         async function patch(url, data, json = false) {
             return new Promise((resolve, reject) => {
                 const headers = json ? { 'Content-Type': 'application/json; charset=UTF-8' } : {};
-                fetch(url, {
+                fetch(`${APP_URL}${url}`, {
                     method: 'PATCH',
                     credentials: 'include',
                     headers,
@@ -104,7 +104,7 @@
 
         async function restDelete(url) {
             return new Promise((resolve, reject) => {
-                fetch(url, {
+                fetch(`${APP_URL}${url}`, {
                     method: 'DELETE',
                     credentials: 'include',
                     headers: {},
@@ -115,23 +115,6 @@
                 });
             });
         }
-
-        // async function upload(url, fileData) {
-        //     const formData  = new FormData();
-        //     formData.append('file', fileData);
-        //     return new Promise((resolve, reject) => {
-        //         fetch(url, {
-        //             method:      'POST',
-        //             credentials: 'include',
-        //             headers:     {},
-        //             body:        JSON.stringify(data),
-        //         }).then(resp => {
-        //             resolve(resp.json());
-        //         }).catch(error => {
-        //             reject(error);
-        //         });
-        //     });
-        // }
 
         (async function main() {
             await riot.compile();

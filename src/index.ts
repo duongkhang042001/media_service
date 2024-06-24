@@ -117,7 +117,7 @@ async function createDrive() {
     instance.register(UploadRoute);
     instance.register(FileRoute);
     instance.register(DownloadAppRoute);
-  });
+  }, { 'prefix': '/api' });
 
   server.register(GoogleDriveSync);
 
