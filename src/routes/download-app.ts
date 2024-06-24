@@ -1,9 +1,9 @@
-import {FastifyInstance} from 'fastify'
+import { FastifyInstance } from 'fastify'
 import _ from 'lodash'
-import {AppLink} from '../entities/app-link'
-import {QueryOrder} from '@mikro-orm/core'
+import { AppLink } from '../entities/app-link'
+import { QueryOrder } from '@mikro-orm/core'
 
-enum OS {IOS, ANDROID}
+enum OS { IOS, ANDROID }
 
 export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) {
     interface IDownloadApp {
@@ -23,11 +23,11 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
     }>(`/download-app/:name`, {
         schema: {
             params: {
-                type:       'object',
+                type: 'object',
                 properties: {
-                    name: {type: 'string', 'minLength': 3}
+                    name: { type: 'string', 'minLength': 3 }
                 },
-                required:   ['name']
+                required: ['name']
             }
         }
     }, async (request, reply) => {
@@ -39,7 +39,7 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
 
         // @ts-ignore
         const appLinkRepo = request.em.getRepository(AppLink)
-        const appLink = await appLinkRepo.findOne({name: request.params.name})
+        const appLink = await appLinkRepo.findOne({ name: request.params.name })
         if (!appLink) throw new Error(`app ${request.params.name} not found`)
 
         // console.log('download-app', os, userAgent)
@@ -76,10 +76,10 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
     }>(`/app-link`, {
         schema: {
             querystring: {
-                type:       'object',
+                type: 'object',
                 properties: {
-                    offset: {type: 'number', default: 0},
-                    limit:  {type: 'number', default: 100},
+                    offset: { type: 'number', default: 0 },
+                    limit: { type: 'number', default: 100 },
                 }
             },
         }
@@ -92,7 +92,7 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
         const appLinkRepo = request.em.getRepository(AppLink)
         const [files, count] = await appLinkRepo.findAndCount(
             {}, [],
-            {createTime: QueryOrder.DESC}, limit, offset
+            { createTime: QueryOrder.DESC }, limit, offset
         )
         return {
             offset, limit,
@@ -107,15 +107,15 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
     }>(`/app-link/:id`, {
         schema: {
             params: {
-                type:       'object',
-                properties: {id: {type: 'number'}}
+                type: 'object',
+                properties: { id: { type: 'number' } }
             },
-            body:   {
-                type:                 'object',
-                properties:           {
-                    name:        {type: 'string'},
-                    iosLink:     {type: 'string'},
-                    androidLink: {type: 'string'},
+            body: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    iosLink: { type: 'string' },
+                    androidLink: { type: 'string' },
                 },
                 additionalProperties: false
             },
@@ -123,7 +123,7 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
     }, async (request, reply) => {
         // @ts-ignore
         const repository = request.em.getRepository(AppLink)
-        const record = await repository.findOneOrFail({id: request.params.id})
+        const record = await repository.findOneOrFail({ id: request.params.id })
         request.em.assign(record, request.body)
         await repository.persistAndFlush(record)
         return record
@@ -134,11 +134,11 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
     }>(`/app-link`, {
         schema: {
             body: {
-                type:                 'object',
-                properties:           {
-                    name:        {type: 'string'},
-                    iosLink:     {type: 'string'},
-                    androidLink: {type: 'string'},
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    iosLink: { type: 'string' },
+                    androidLink: { type: 'string' },
                 },
                 additionalProperties: false
             },
@@ -156,14 +156,14 @@ export const DownloadAppRoute = async function (fastify: FastifyInstance, opts) 
     }>(`/app-link/:id`, {
         schema: {
             params: {
-                type:       'object',
-                properties: {id: {type: 'number'}}
+                type: 'object',
+                properties: { id: { type: 'number' } }
             }
         }
     }, async (request, reply) => {
         // @ts-ignore
         const repository = request.em.getRepository(AppLink)
-        const affected = await repository.nativeDelete({id: request.params.id})
-        return {deleted: affected}
+        const affected = await repository.nativeDelete({ id: request.params.id })
+        return { deleted: affected }
     })
 }
