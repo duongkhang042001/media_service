@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        
         "moduleResolution"            : "node",
         "module"                      : "commonjs",
         "target"                      : "es2019",
@@ -17,11 +18,12 @@
         "inlineSourceMap"             : true,
         "noImplicitReturns"           : true,
         "noImplicitThis"              : true,
-        "strict"                      : true,
-        "strictNullChecks"            : true,
-        "allowJs"                     : true
+        "strict"                      : false,
+        "strictNullChecks"            : false,
+        "allowJs"                     : true,  
     },
     "include"        : [
         "./src/**/*"
-    ]
+    ],
+    
 }
