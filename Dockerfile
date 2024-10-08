@@ -10,6 +10,7 @@ COPY . .
 
 CMD ["npm", "run" , "build"]
 
+
 FROM node:14.21.1 as production
 
 ARG NODE_ENV=production
@@ -24,4 +25,4 @@ RUN npm ci --only=production
 
 COPY --from=development /app/dist ./dist
 
-CMD [ "npm", "start" ]
+CMD [ "node", "./dist/index.js" ]
