@@ -25,9 +25,8 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build Docker image
-      run: |
-        docker build -t media-service:latest .
+    - name: Build application
+    - run: npm run build
     
   # Deploy job
   deploy:
@@ -47,7 +46,7 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
     - name: Add server to known hosts
-      run: ssh-keyscan -H your-server.com >> ~/.ssh/known_hosts
+      run: ssh-keyscan -H khangduong.me >> ~/.ssh/known_hosts
 
     - name: Deploy to server
       run: |
