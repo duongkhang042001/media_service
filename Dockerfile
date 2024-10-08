@@ -8,9 +8,7 @@ RUN npm install && npm cache clean --force
 
 COPY . .
 
-RUN npm run build  # Ensure this creates the dist folder
-
-CMD ["ls", "-la", "dist"]
+RUN npm run build
 
 FROM node:14.21.1 as production
 
