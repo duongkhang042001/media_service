@@ -43,16 +43,3 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    - name: Add server to known hosts
-      run: ssh-keyscan -H khangduong.me >> ~/.ssh/known_hosts
-
-    - name: Deploy to server
-      run: |
-        ssh khangduong@ssh.khangduong.me -p 443 "
-        cd /app &&
-        git pull origin main &&
-        npm run build &&
-        pm2 start .dist/index.js
-        pm2 reload ecosystem.config.js --env production
-        "
