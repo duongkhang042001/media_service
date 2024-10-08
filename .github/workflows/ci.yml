@@ -26,8 +26,8 @@ jobs:
       run: npm install
 
     - name: Build application
-    - run: npm run build
-    
+      run: npm run build  # Added 'run'
+
   # Deploy job
   deploy:
     needs: build
@@ -57,4 +57,3 @@ jobs:
         pm2 start .dist/index.js
         pm2 reload ecosystem.config.js --env production
         "
-
