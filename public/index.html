@@ -32,6 +32,7 @@
         crossorigin="anonymous"></script>
     <script>
         const APP_URL = `${window.location.href}api` ?? 'http://127.0.0.1:8005/api';
+        console.log({ APP_URL });
 
         async function get(url) {
             return new Promise((resolve, reject) => {
