@@ -8,8 +8,9 @@ RUN npm install && npm cache clean --force
 
 COPY . .
 
-CMD ["npm", "run" , "build"]
+RUN npm run build  # Ensure this creates the dist folder
 
+CMD ["ls", "-la", "dist"]
 
 FROM node:14.21.1 as production
 
@@ -25,4 +26,4 @@ RUN npm ci --only=production
 
 COPY --from=development /app/dist ./dist
 
-CMD [ "node", "./dist/index.js" ]
+CMD ["node", "./dist/index.js"]
