@@ -28,7 +28,7 @@ jobs:
     - name: Build application
       run: npm run build  # Added 'run'
 
-    deploy:
+  deploy:
     needs: build
     runs-on: ubuntu-latest
 
