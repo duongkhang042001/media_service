@@ -53,9 +53,7 @@ jobs:
         ssh khangduong@ssh.khangduong.me -p 443 "
         cd /app &&
         git pull origin main &&
-        docker build -t media-service:latest . &&
-        docker stop media-service || true &&
-        docker rm media-service || true &&
-        docker run -d --name media-service -p 3000:3000 media-service:latest &&
+        npm run build &&
+        pm2 start .dist/index.js
         pm2 reload ecosystem.config.js --env production
         "
